@@ -10,6 +10,10 @@
       </div>
     </form>
 
+    <div v-show="isError" class="error-message">
+      <ph-warning-circle :size="32" /> <span>something went wrong</span>
+    </div>
+
     <Loading v-if="loading" />
 
     <div v-else class="grid-movies">
@@ -41,6 +45,7 @@ export default {
       currentPage: 1,
       loading: true,
       loadMore: false,
+      isError: false,
     };
   },
   watch: {
@@ -67,7 +72,8 @@ export default {
         this.loading = false;
         this.loadMore = true;
       } catch (error) {
-        console.log(error);
+        console.clear();
+        this.isError = true;
       }
     },
     async searchMovie(e) {
@@ -89,7 +95,6 @@ export default {
         this.movies = response.data.results;
         this.isSearching = true;
         this.loading = false;
-        console.log(response.data.results);
 
         if (
           response.data.results.length !== 0 &&
@@ -100,7 +105,8 @@ export default {
           this.loadMore = false;
         }
       } catch (error) {
-        console.log(error);
+        console.clear();
+        this.isError = true;
       }
     },
     async getMoreMovies() {
@@ -127,7 +133,8 @@ export default {
         }
         this.loading = false;
       } catch (error) {
-        return;
+        console.clear();
+        this.isError = true;
       }
     },
   },
@@ -185,6 +192,18 @@ export default {
 
 .input:focus-within {
   border: 2px solid #42b883;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 32px;
+  color: crimson;
+}
+
+.error-message span {
+  margin-left: 8px;
 }
 
 .grid-movies {

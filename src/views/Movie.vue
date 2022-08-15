@@ -1,8 +1,11 @@
 <template>
   <main class="movie-main">
+    <div v-show="isError" class="error-message">
+      <ph-warning-circle :size="32" /> <span>{{ statusMessage }}</span>
+    </div>
     <Loading v-if="isloadingMovies" />
 
-    <div v-else>
+    <div v-if="!isloadingMovies && !isError">
       <section
         class="movie-top-container"
         :style="
@@ -24,7 +27,7 @@
             </div>
 
             <div class="movie-info">
-              <h1>{{ movie.title }} ({{ getYear(movie.release_date) }})</h1>
+              <h1>{{ movie.title }} {{ showYear(movie.release_date) }}</h1>
 
               <div class="movie-meta">
                 <div class="movie-categories">
@@ -216,6 +219,8 @@ export default {
       directors: [],
       isloadingCredits: true,
       isloadingMovies: true,
+      statusMessage: "",
+      isError: false,
     };
   },
   methods: {
@@ -231,10 +236,16 @@ export default {
           this.movie = res.data;
           this.isloadingMovies = false;
           document.title = `${res.data.title} - VueMovies`;
-          console.log(res.data);
         })
         .catch((error) => {
-          console.log(error);
+          this.isError = true;
+          this.isloadingMovies = false;
+          console.clear();
+          if (error.response.data.status_code === 34) {
+            this.statusMessage = "Movie not found";
+          } else {
+            this.statusMessage = error.response.data.status_message;
+          }
         });
     },
     async loadMovieCast() {
@@ -250,12 +261,16 @@ export default {
           this.isloadingCredits = false;
         })
         .catch((error) => {
-          console.log(error);
+          console.clear();
+          this.isError = true;
+          this.isloadingCredits = false;
         });
     },
-    getYear(date) {
-      const year = date.split("-");
-      return year[0];
+    showYear(date) {
+      if (date) {
+        const year = date.split("-");
+        return `(${year[0]})`;
+      }
     },
     formatMoney(value) {
       return value.toLocaleString("en-US", {
@@ -282,6 +297,18 @@ export default {
 <style>
 .movie-main {
   flex: 1;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 32px;
+  color: crimson;
+}
+
+.error-message span {
+  margin-left: 8px;
 }
 
 .movie-top-container {
@@ -630,10 +657,12 @@ export default {
 }
 
 @media (min-width: 800px) {
-  .movie-poster,
-  .movie-empty-poster {
+  .movie-poster {
     display: block;
-    visibility: visible;
+  }
+
+  .movie-empty-poster {
+    display: flex;
   }
 
   .movie-container {
